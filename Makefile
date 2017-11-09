@@ -645,6 +645,9 @@ KBUILD_CFLAGS   += -O2
 endif
 endif
 
+# Fix Unbreak Device in boot:
+KBUILD_CFLAGS   += $(call cc-option,-fno-store-merging,)
+
 # Tell gcc to never replace conditional load with a non-conditional one
 KBUILD_CFLAGS	+= $(call cc-option,--param=allow-store-data-races=0)
 
