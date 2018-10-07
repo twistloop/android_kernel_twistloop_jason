@@ -417,8 +417,7 @@
 				fsmgr_flags = "wait";
 			};
 			vendor {
-				dev = "/dev/block/platform/soc/c0c4000.sdhci/by-name/cust";
-				fsmgr_flags = "wait";
+				status = "disabled";
 			};
 		};
 	};
