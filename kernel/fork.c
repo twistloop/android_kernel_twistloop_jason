@@ -176,6 +176,7 @@ static unsigned long *alloc_thread_stack_node(struct task_struct *tsk,
 static inline void free_thread_stack(unsigned long *stack)
 {
 	struct page *page = virt_to_page(stack);
+	kaiser_unmap_thread_stack(stack);
 
 	kasan_alloc_pages(page, THREAD_SIZE_ORDER);
 	kaiser_unmap_thread_stack(stack);
