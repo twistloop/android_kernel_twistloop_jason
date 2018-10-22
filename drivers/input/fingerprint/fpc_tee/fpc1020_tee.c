@@ -84,7 +84,7 @@ struct fpc1020_data {
 	struct wake_lock ttw_wl;
 	int irq_gpio;
 	int rst_gpio;
-	struct mutex lock; /* To set/get exported values in sysfs */
+	struct rt_mutex lock; /* To set/get exported values in sysfs */
 	bool prepared;
 	atomic_t wakeup_enabled; /* Used both in ISR and non-ISR */
 	int irqf;
@@ -214,9 +214,9 @@ static ssize_t pinctl_set(struct device *dev,
 	struct fpc1020_data *fpc1020 = dev_get_drvdata(dev);
 	int rc;
 
-	mutex_lock(&fpc1020->lock);
+	rt_mutex_lock(&fpc1020->lock);
 	rc = select_pin_ctl(fpc1020, buf);
-	mutex_unlock(&fpc1020->lock);
+	rt_mutex_unlock(&fpc1020->lock);
 
 	return rc ? rc : count;
 }
@@ -240,9 +240,9 @@ static ssize_t regulator_enable_set(struct device *dev,
 	else
 		return -EINVAL;
 
-	mutex_lock(&fpc1020->lock);
+	rt_mutex_lock(&fpc1020->lock);
 	rc = vreg_setup(fpc1020, name, enable);
-	mutex_unlock(&fpc1020->lock);
+	rt_mutex_unlock(&fpc1020->lock);
 
 	return rc ? rc : count;
 }
@@ -282,9 +282,9 @@ static ssize_t hw_reset_set(struct device *dev,
 	struct fpc1020_data *fpc1020 = dev_get_drvdata(dev);
 
 	if (!strncmp(buf, "reset", strlen("reset"))) {
-		mutex_lock(&fpc1020->lock);
+		rt_mutex_lock(&fpc1020->lock);
 		rc = hw_reset(fpc1020);
-		mutex_unlock(&fpc1020->lock);
+		rt_mutex_unlock(&fpc1020->lock);
 	} else {
 		return -EINVAL;
 	}
@@ -329,7 +329,7 @@ static int device_prepare(struct fpc1020_data *fpc1020, bool enable)
 	int rc;
 	struct device *dev = fpc1020->dev;
 
-	mutex_lock(&fpc1020->lock);
+	rt_mutex_lock(&fpc1020->lock);
 	if (enable && !fpc1020->prepared) {
 		rc = fpc1020_request_named_gpio(fpc1020, "fpc,gpio_irq",
 					&fpc1020->irq_gpio);
@@ -382,7 +382,7 @@ exit:
 	} else {
 		rc = 0;
 	}
-	mutex_unlock(&fpc1020->lock);
+	rt_mutex_unlock(&fpc1020->lock);
 
 	return rc;
 }
@@ -420,8 +420,8 @@ static ssize_t wakeup_enable_set(struct device *dev,
 	struct fpc1020_data *fpc1020 = dev_get_drvdata(dev);
 	ssize_t ret = count;
 
-	mutex_lock(&fpc1020->lock);
-	mutex_unlock(&fpc1020->lock);
+	rt_mutex_lock(&fpc1020->lock);
+	rt_mutex_unlock(&fpc1020->lock);
 
 	return ret;
 }
@@ -483,14 +483,14 @@ static ssize_t irq_enable_set(struct device *dev,
         struct fpc1020_data *fpc1020 = dev_get_drvdata(dev);
 
         if (!strncmp(buf, "1", strlen("1"))) {
-                mutex_lock(&fpc1020->lock);
+                rt_mutex_lock(&fpc1020->lock);
                 enable_irq(gpio_to_irq(fpc1020->irq_gpio));
-                mutex_unlock(&fpc1020->lock);
+                rt_mutex_unlock(&fpc1020->lock);
                 pr_debug("fpc enable irq\n");
         } else if (!strncmp(buf, "0", strlen("0"))) {
-                mutex_lock(&fpc1020->lock);
+                rt_mutex_lock(&fpc1020->lock);
                 disable_irq(gpio_to_irq(fpc1020->irq_gpio));
-                mutex_unlock(&fpc1020->lock);
+                rt_mutex_unlock(&fpc1020->lock);
                 pr_debug("fpc disable irq\n");
         }
 
@@ -513,15 +513,15 @@ static ssize_t proximity_state_set(struct device *dev,
 	if (fpc1020->fb_black) {
 		if (fpc1020->proximity_state) {
 			/* Disable IRQ when screen is off and proximity sensor is covered */
-			mutex_lock(&fpc1020->lock);
+			rt_mutex_lock(&fpc1020->lock);
 			config_irq(fpc1020, false);
-			mutex_unlock(&fpc1020->lock);
+			rt_mutex_unlock(&fpc1020->lock);
 		} else if (atomic_read(&fpc1020->wakeup_enabled)) {
 			/* Enable IRQ when screen is off and proximity sensor is uncovered,
 			   but only if fingerprint wake up is enabled */
-			mutex_lock(&fpc1020->lock);
+			rt_mutex_lock(&fpc1020->lock);
 			config_irq(fpc1020, true);
-			mutex_unlock(&fpc1020->lock);
+			rt_mutex_unlock(&fpc1020->lock);
 		}
 	}
 
@@ -625,18 +625,18 @@ static int fpc_fb_notif_callback(struct notifier_block *nb,
 			 */
 			if (!atomic_read(&fpc1020->wakeup_enabled) ||
 					fpc1020->proximity_state) {
-				mutex_lock(&fpc1020->lock);
+				rt_mutex_lock(&fpc1020->lock);
 				config_irq(fpc1020, false);
-				mutex_unlock(&fpc1020->lock);
+				rt_mutex_unlock(&fpc1020->lock);
 			}
 			break;
 		case FB_BLANK_UNBLANK:
 		case FB_BLANK_NORMAL:
 			fpc1020->fb_black = false;
 			/* Unconditionally enable IRQ when screen turns on */
-			mutex_lock(&fpc1020->lock);
+			rt_mutex_lock(&fpc1020->lock);
 			config_irq(fpc1020, true);
-			mutex_unlock(&fpc1020->lock);
+			rt_mutex_unlock(&fpc1020->lock);
 			break;
 		default:
 			pr_debug("%s defalut\n", __func__);
@@ -765,7 +765,7 @@ static int fpc1020_probe(struct platform_device *pdev)
 
 	fpc1020->irqf = IRQF_TRIGGER_RISING | IRQF_ONESHOT | IRQF_NO_SUSPEND | IRQF_PERF_CRITICAL;
 	device_init_wakeup(dev, 1);
-	mutex_init(&fpc1020->lock);
+	rt_mutex_init(&fpc1020->lock);
 
 	wake_lock_init(&fpc1020->ttw_wl, WAKE_LOCK_SUSPEND, "fpc_ttw_wl");
 
@@ -809,7 +809,7 @@ static int fpc1020_remove(struct platform_device *pdev)
 
 	fb_unregister_client(&fpc1020->fb_notifier);
 	sysfs_remove_group(&pdev->dev.kobj, &attribute_group);
-	mutex_destroy(&fpc1020->lock);
+	rt_mutex_destroy(&fpc1020->lock);
 	wake_lock_destroy(&fpc1020->ttw_wl);
 	(void)vreg_setup(fpc1020, "vdd_ana", false);
 	dev_info(&pdev->dev, "%s\n", __func__);
