@@ -650,6 +650,7 @@ KBUILD_CFLAGS   += $(call cc-disable-warning, discarded-array-qualifiers,)
 KBUILD_CFLAGS   += $(call cc-disable-warning, sizeof-pointer-memaccess,)
 KBUILD_CFLAGS   += $(call cc-disable-warning, packed-not-aligned,)
 KBUILD_CFLAGS   += $(call cc-disable-warning, stringop-truncation,)
+KBUILD_CFLAGS   += $(call cc-disable-warning, declaration-after-statement,)
 
 
 ifdef CONFIG_CC_OPTIMIZE_FOR_SIZE
