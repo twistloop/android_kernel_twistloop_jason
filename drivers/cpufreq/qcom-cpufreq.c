@@ -29,12 +29,6 @@
 #include <linux/of.h>
 #include <trace/events/power.h>
 
-// AP: Default startup frequencies
-#define CONFIG_CPU_FREQ_MIN_CLUSTER1	300000
-#define CONFIG_CPU_FREQ_MAX_CLUSTER1	1843200
-#define CONFIG_CPU_FREQ_MIN_CLUSTER2	300000
-#define CONFIG_CPU_FREQ_MAX_CLUSTER2	2208000
-
 static DEFINE_MUTEX(l2bw_lock);
 
 static struct clk *cpu_clk[NR_CPUS];
