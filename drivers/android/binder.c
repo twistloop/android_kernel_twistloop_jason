@@ -2397,7 +2397,6 @@ static int binder_translate_fd(u32 *fdp,
 	}
 	fixup->file = file;
 	fixup->offset = (uintptr_t)fdp - (uintptr_t)t->buffer->data;
-	trace_binder_transaction_fd_send(t, fd, fixup->offset);
 	list_add_tail(&fixup->fixup_entry, &t->fd_fixups);
 
 	return ret;
@@ -2743,8 +2742,6 @@ static void binder_transaction(struct binder_proc *proc,
 			 * the transaction, and nothing is queued to the
 			 * todo list while the thread is on waiting_threads.
 			 */
-			binder_user_error("%d:%d new transaction not allowed when there is a transaction on thread todo\n",
-					  proc->pid, thread->pid);
 			binder_inner_proc_unlock(proc);
 			return_error = BR_FAILED_REPLY;
 			return_error_param = -EPROTO;
@@ -3167,7 +3164,6 @@ binder_free_buf(struct binder_proc *proc, struct binder_buffer *buffer)
 		}
 		binder_node_inner_unlock(buf_node);
 	}
-	trace_binder_transaction_buffer_release(buffer);
 	binder_transaction_buffer_release(proc, buffer, NULL);
 	binder_alloc_free_buf(&proc->alloc, buffer);
 }
@@ -3582,16 +3578,9 @@ static int binder_apply_fd_fixups(struct binder_transaction *t)
 		u32 *fdp;
 
 		if (fd < 0) {
-			binder_debug(BINDER_DEBUG_TRANSACTION,
-				     "failed fd fixup txn %d fd %d\n",
-				     t->debug_id, fd);
 			ret = -ENOMEM;
 			break;
 		}
-		binder_debug(BINDER_DEBUG_TRANSACTION,
-			     "fd fixup txn %d fd %d\n",
-			     t->debug_id, fd);
-		trace_binder_transaction_fd_recv(t, fd, fixup->offset);
 		fd_install(fd, fixup->file);
 		fixup->file = NULL;
 		fdp = (u32 *)(t->buffer->data + fixup->offset);
@@ -3875,8 +3864,6 @@ retry:
 		ret = binder_apply_fd_fixups(t);
 		if (ret) {
 			struct binder_buffer *buffer = t->buffer;
-			bool oneway = !!(t->flags & TF_ONE_WAY);
-			int tid = t->debug_id;
 
 			if (t_from)
 				binder_thread_dec_tmpref(t_from);
@@ -3884,18 +3871,11 @@ retry:
 			binder_cleanup_transaction(t, "fd fixups failed",
 						   BR_FAILED_REPLY);
 			binder_free_buf(proc, buffer);
-			binder_debug(BINDER_DEBUG_FAILED_TRANSACTION,
-				     "%d:%d %stransaction %d fd fixups failed %d/%d, line %d\n",
-				     proc->pid, thread->pid,
-				     oneway ? "async " :
-					(cmd == BR_REPLY ? "reply " : ""),
-				     tid, BR_FAILED_REPLY, ret, __LINE__);
 			if (cmd == BR_REPLY) {
 				cmd = BR_FAILED_REPLY;
 				if (put_user(cmd, (uint32_t __user *)ptr))
 					return -EFAULT;
 				ptr += sizeof(uint32_t);
-				binder_stat_br(proc, thread, cmd);
 				break;
 			}
 			continue;
