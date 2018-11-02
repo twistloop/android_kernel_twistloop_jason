@@ -4761,7 +4761,7 @@ exit:
 static ssize_t test_sysfs_td4722_b7_amp_open_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
-	int i, j;
+	int i, j = 0;
 	int tx_num = f54->tx_assigned;
 	int rx_num = f54->rx_assigned;
 	int result = 0;
@@ -7845,7 +7845,7 @@ static ssize_t syna_selftest_read(struct file *file, char __user *buf, size_t co
 
 static ssize_t syna_selftest_write(struct file *file, const char __user *buf, size_t count, loff_t *pos)
 {
-	int retval;
+	int retval = 0;
 	char tmp[6];
 
 	if (!f54->data || count > sizeof(tmp)) {

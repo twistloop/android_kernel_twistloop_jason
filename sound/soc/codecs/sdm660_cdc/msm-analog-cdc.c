@@ -517,7 +517,7 @@ static int msm_anlg_cdc_codec_standalone_micbias(struct snd_soc_codec *codec,
 {
 	struct on_demand_supply *supply;
 	bool micbias2;
-	int ret;
+	int ret = 0;
 
 	struct sdm660_cdc_priv *sdm660_cdc =
 				snd_soc_codec_get_drvdata(codec);

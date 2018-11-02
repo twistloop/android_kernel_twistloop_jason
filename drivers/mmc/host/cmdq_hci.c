@@ -1030,11 +1030,13 @@ skip_cqterri:
 			    mmc_card_configured_auto_bkops(mmc->card))
 				mmc->card->bkops.needs_check = true;
 
+ 			mrq = get_req_by_tag(cq_host, tag);
 			mrq->cmdq_req->resp_err = true;
 			pr_err("%s: Response error (0x%08x) from card !!!",
 				mmc_hostname(mmc), cmdq_readl(cq_host, CQCRA));
 
 		} else {
+			mrq = get_req_by_tag(cq_host, tag);
 			mrq->cmdq_req->resp_idx = cmdq_readl(cq_host, CQCRI);
 			mrq->cmdq_req->resp_arg = cmdq_readl(cq_host, CQCRA);
 		}
