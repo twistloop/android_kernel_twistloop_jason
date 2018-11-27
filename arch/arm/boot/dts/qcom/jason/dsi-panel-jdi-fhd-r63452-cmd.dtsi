@@ -24,6 +24,10 @@
 		qcom,mdss-dsi-panel-sleepwrmod = <0>;
 		qcom,mdss-dsi-panel-type = "dsi_cmd_mode";
 		qcom,mdss-dsi-panel-framerate = <60>;
+                qcom,mdss-dsi-pan-enable-dynamic-fps;
+                qcom,mdss-dsi-pan-fps-update = "dfps_immediate_porch_mode";
+                qcom,ulps-enabled;
+                qcom,suspend-ulps-enabled;
 		qcom,mdss-dsi-virtual-channel-id = <0>;
 		qcom,mdss-dsi-stream = <0>;
 		qcom,mdss-dsi-panel-width = <1080>;
