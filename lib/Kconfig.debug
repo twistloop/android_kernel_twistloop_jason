@@ -1842,9 +1842,6 @@ endmenu # runtime tests
 config PROVIDE_OHCI1394_DMA_INIT
 	bool "Remote debugging over FireWire early on boot"
 	depends on PCI && X86
-config TEST_OVERFLOW
-	tristate "Test check_*_overflow() functions at runtime"
-
 	help
 	  If you want to debug problems which hang or crash the kernel early
 	  on boot and the crashing machine has a FireWire port, you can use
