@@ -641,7 +641,6 @@ KBUILD_CFLAGS	+= $(call cc-disable-warning, format-overflow)
 KBUILD_CFLAGS	+= $(call cc-disable-warning, int-in-bool-context)
 KBUILD_CFLAGS	+= $(call cc-disable-warning, attribute-alias)
 KBUILD_CFLAGS   += $(call cc-disable-warning, packed-not-aligned)
-KBUILD_CFLAGS   += $(call cc-disable-warning, stringop-truncation)
 KBUILD_CFLAGS   += $(call cc-disable-warning, stringop-overflow)
 
 
